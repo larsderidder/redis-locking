@@ -12,7 +12,7 @@ requires-python = ">=3.8"
 dependencies = ["python-redis-lock>=4.0"]
 
 [project.optional-dependencies]
-dev = ["black", "pytest"]
+dev = ["black", "fakeredis[lua]", "pytest"]
 
 [project.urls]
 Homepage = "https://github.com/larsderidder/redis-locking"
