@@ -9,10 +9,13 @@ description = "Convenience helpers for named Redis locks."
 readme = "README.md"
 license = {text = "MIT"}
 requires-python = ">=3.8"
-dependencies = ["python-redis-lock>=4.0"]
+# Async locks share the 4.x backend's Lua scripts and notification protocol.
+dependencies = ["python-redis-lock>=4.0,<5"]
 
 [project.optional-dependencies]
-dev = ["black", "fakeredis[lua]", "pytest"]
+# redis-py 8.1 fails the waiter cancellation test; keep the tested client series.
+asyncio = ["redis>=5.0,<8"]
+dev = ["black", "fakeredis[lua]", "hypothesis>=6.0", "pytest", "pytest-asyncio>=0.24", "redis>=5.0,<8"]
 
 [project.urls]
 Homepage = "https://github.com/larsderidder/redis-locking"

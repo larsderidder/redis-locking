@@ -145,6 +145,31 @@ def is_process_locked(redis_conn, process_name: str, entity_id: Optional[int] = 
 
 Now the rest of the application does not have to remember key prefixes, expiry values, or whether a particular lock should block. It just calls `lock_process` and gets on with the work.
 
+## Async callers
+
+Install `redis-locking[asyncio]` for clients from `redis.asyncio`, including clients created through Sentinel. The async API requires Redis 6.0 or later and currently supports redis-py 5 through 7.
+
+```python
+from redis.asyncio import Redis
+from redis_locking import LockSettings
+from redis_locking.asyncio import acquire_lock
+
+settings = LockSettings(key_prefix="worker:", lock_expire=120, acquire_timeout=5)
+
+async def run():
+    async with Redis.from_url("redis://localhost:6379/0") as client:
+        async with acquire_lock(client, "daily-sync", settings=settings):
+            await run_daily_sync()
+```
+
+Use the same Redis database, key, and `key_prefix` in both APIs to protect the same resource. Both use `lock:<prefixed-key>` for ownership and `lock-signal:<prefixed-key>` to wake waiting callers; releasing through either API wakes callers of the other.
+
+`redis_locking.asyncio` also exports `is_locked`, `lock_key`, `locked`, `build_key`, and the existing settings and exception classes. Readiness callbacks passed to async `lock_key` must be coroutines; `locked` decorates coroutines rather than synchronous functions. Async acquisition uses a total timeout across notifications, and zero means no acquisition deadline.
+
+Set `auto_renewal=True` to extend the lease while the async context is active. A failed renewal is reported when the context exits. Expiry, stalled renewal, or Redis failover can allow another worker to acquire a resource before the original worker finishes; the package does not issue fencing tokens.
+
+Cancellation waits for ownership-checked cleanup, including when Redis accepted an acquisition before cancellation arrived. Configure socket timeouts on the client and keep lock expiry enabled; a connection failure can prevent cleanup, leaving the lease until it expires.
+
 ## API
 
 ```python
@@ -167,6 +192,8 @@ from redis_locking import (
 $ python -m venv .venv
 $ . .venv/bin/activate
 $ python -m pip install -U pip
-$ python -m pip install -e ".[dev]"
+$ python -m pip install -e ".[dev,asyncio]"
 $ pytest
 ```
+
+Install `redis-server` to run the real-server interoperability tests. They start an isolated process with a private Unix socket, no TCP listener, and persistence disabled; those cases are skipped when the executable is unavailable. The same async tests also run against fakeredis.

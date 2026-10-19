@@ -5,12 +5,13 @@ Convenience helpers for named Redis locks.
 from __future__ import annotations
 
 import time
-from collections.abc import Callable, Iterator
+from collections.abc import Iterator
 from contextlib import contextmanager
 from dataclasses import dataclass, replace
 from functools import wraps
-from typing import Any, Optional
+from typing import Any, Callable, Optional
 
+redis_lock: Any
 try:
     import redis_lock
 except ImportError:  # pragma: no cover - handled at runtime or by tests.
