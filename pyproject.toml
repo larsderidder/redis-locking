@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "redis-locking"
-version = "0.1.1"
+version = "0.2.0"
 description = "Convenience helpers for named Redis locks."
 readme = "README.md"
 license = {text = "MIT"}
@@ -19,6 +19,7 @@ dev = ["black", "fakeredis[lua]", "hypothesis>=6.0", "pytest", "pytest-asyncio>=
 
 [project.urls]
 Homepage = "https://github.com/larsderidder/redis-locking"
+Changelog = "https://github.com/larsderidder/redis-locking/blob/main/CHANGELOG.md"
 
 [tool.setuptools]
 package-dir = {"" = "src"}
