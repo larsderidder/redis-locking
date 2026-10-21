@@ -8,6 +8,9 @@ on:
 permissions:
   contents: read
 
+env:
+  PIP_CERT: /etc/ssl/certs/ca-certificates.crt
+
 jobs:
   publish:
     runs-on: ubuntu-latest
@@ -16,12 +19,16 @@ jobs:
       id-token: write
       contents: read
     steps:
+      - name: Update system CA certificates
+        run: sudo apt-get update && sudo apt-get install -y --reinstall ca-certificates
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
         with:
           python-version: '3.12'
       - name: Build package
         run: |
+          # pip's truststore mode also loads its vendored roots.
+          cp "$PIP_CERT" "$(python -m pip._vendor.certifi)"
           python -m pip install -U pip build
           python -m build
       - name: Publish package
